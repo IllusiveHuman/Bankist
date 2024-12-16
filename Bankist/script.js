@@ -82,7 +82,7 @@ const formatMovementDate = function (date, acc) {
   if (daysPassed === 1) { return 'Yesterday' }
   if (daysPassed <= 7) { return `${daysPassed} days ago` }
   else {
-    return new Intl.DateTimeFormat(acc.locale).format(new Date());
+    return new Intl.DateTimeFormat(acc.locale).format(date);
   }
 
 
@@ -98,12 +98,23 @@ const formatCur = function (value, locale, currency) {
 const displayMovements = function (acc, sort = false) {
   containerMovements.innerHTML = '';
 
-  const movs = sort ? acc.movements.slice().sort((a, b) => a - b) : acc.movements;
+  const combinedMovementsAndDates = acc.movements.map((mov, i) => {
+    return {
+      movement: mov,
+      movementDate: acc.movementsDates.at(i)
+    }
+  })
 
-  movs.forEach(function (mov, i) {
-    const type = mov > 0 ? 'deposit' : 'withdrawal';
 
-    const date = new Date(acc.movementsDates[i]);
+  if (sort) {
+    combinedMovementsAndDates.sort((a, b) => a.movement - b.movement)
+  }
+
+  combinedMovementsAndDates.forEach(function (obj, i) {
+    const { movement, movementDate } = obj;
+    const type = movement > 0 ? 'deposit' : 'withdrawal';
+
+    const date = new Date(movementDate);
     const displayDate = formatMovementDate(date, acc);
 
     const html = `
@@ -111,7 +122,7 @@ const displayMovements = function (acc, sort = false) {
         <div class="movements__type movements__type--${type}">${i + 1
       } ${type}</div>
         <div class="movements__date">${displayDate}</div>
-        <div class="movements__value">${formatCur(mov, acc.local, acc.currency)}</div>
+        <div class="movements__value">${formatCur(movement, acc.local, acc.currency)}</div>
       </div>
     `;
 
